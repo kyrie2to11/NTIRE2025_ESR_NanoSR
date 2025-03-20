@@ -1,7 +1,7 @@
 # Usage Guide
 
 ## Environment & Dataset Setup
-1. Prepare the environment and dataset according to the official repo: ![NTIRE2025_ESR](https://github.com/Amazingren/NTIRE2025_ESR.git)
+1. Prepare the environment and dataset according to the official repository: [NTIRE2025_ESR](https://github.com/Amazingren/NTIRE2025_ESR.git).
 
 ## Validate on DIV2K_LSDIR_valid Dataset
 1. Uncomment the following line in `test_demo.py` to generate Super-Resolution (SR) results of the validation dataset:
