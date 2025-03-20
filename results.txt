@@ -1,1 +1,2 @@
-Model               	Val PSNR  	Test PSNR 	Val Time [ms] 	Test Time [ms]	Ave Time [ms] 	Params [M]	FLOPs [G] 	Acts [M]	Mem [M] 	Conv    
+Model               	Val PSNR  	Val Time [ms] 	Params [M]	FLOPs [G] 	Acts [M]	Mem [M] 	Conv    
+07_NanoSR_inference 	26.97     	5.78          	0.551     	36.02     	88.08   	965.48  	  28    

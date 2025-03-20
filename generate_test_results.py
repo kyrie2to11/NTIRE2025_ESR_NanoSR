@@ -47,12 +47,16 @@ def select_model(args, device):
 
 def select_dataset(data_dir, mode):
     # inference on the DIV2K_LSDIR_test set
+    # if mode == "test":
+    #     path = [
+    #         (
+    #             p.replace("_HR", "_LR").replace(".png", "x4.png"),
+    #             p
+    #         ) for p in sorted(glob.glob(os.path.join(data_dir, "DIV2K_LSDIR_test_HR/*.png")))
+    #     ]
     if mode == "test":
         path = [
-            (
-                p.replace("_HR", "_LR").replace(".png", "x4.png"),
-                p
-            ) for p in sorted(glob.glob(os.path.join(data_dir, "DIV2K_LSDIR_test_HR/*.png")))
+            p for p in sorted(glob.glob(os.path.join(data_dir, "DIV2K_LSDIR_test_LR/*.png")))
         ]
 
     # inference on the DIV2K_LSDIR_valid set
@@ -120,12 +124,15 @@ def run(model, model_name, data_range, tile, logger, device, args, mode="test"):
     start = torch.cuda.Event(enable_timing=True)
     end = torch.cuda.Event(enable_timing=True)
 
-    for i, (img_lr, img_hr) in enumerate(data_path):
+    # for i, (img_lr, img_hr) in enumerate(data_path):
+    for i, img_lr in enumerate(data_path):
 
         # --------------------------------
         # (1) img_lr
         # --------------------------------
-        img_name, ext = os.path.splitext(os.path.basename(img_hr))
+        # img_name, ext = os.path.splitext(os.path.basename(img_hr))
+        img_name, ext = os.path.splitext(os.path.basename(img_lr))
+        img_name = img_name[:-2]
         img_lr = util.imread_uint(img_lr, n_channels=3)
         img_lr = util.uint2tensor4(img_lr, data_range)
         img_lr = img_lr.to(device)
@@ -143,24 +150,24 @@ def run(model, model_name, data_range, tile, logger, device, args, mode="test"):
         # --------------------------------
         # (3) img_hr
         # --------------------------------
-        img_hr = util.imread_uint(img_hr, n_channels=3)
-        img_hr = img_hr.squeeze()
-        img_hr = util.modcrop(img_hr, sf)
+        # img_hr = util.imread_uint(img_hr, n_channels=3)
+        # img_hr = img_hr.squeeze()
+        # img_hr = util.modcrop(img_hr, sf)
 
         # --------------------------------
         # PSNR and SSIM
         # --------------------------------
 
         # print(img_sr.shape, img_hr.shape)
-        psnr = util.calculate_psnr(img_sr, img_hr, border=border)
-        results[f"{mode}_psnr"].append(psnr)
+        # psnr = util.calculate_psnr(img_sr, img_hr, border=border)
+        # results[f"{mode}_psnr"].append(psnr)
 
-        if args.ssim:
-            ssim = util.calculate_ssim(img_sr, img_hr, border=border)
-            results[f"{mode}_ssim"].append(ssim)
-            logger.info("{:s} - PSNR: {:.2f} dB; SSIM: {:.4f}.".format(img_name + ext, psnr, ssim))
-        else:
-            logger.info("{:s} - PSNR: {:.2f} dB".format(img_name + ext, psnr))
+        # if args.ssim:
+        #     ssim = util.calculate_ssim(img_sr, img_hr, border=border)
+        #     results[f"{mode}_ssim"].append(ssim)
+        #     logger.info("{:s} - PSNR: {:.2f} dB; SSIM: {:.4f}.".format(img_name + ext, psnr, ssim))
+        # else:
+        #     logger.info("{:s} - PSNR: {:.2f} dB".format(img_name + ext, psnr))
 
         # if np.ndim(img_hr) == 3:  # RGB image
         #     img_sr_y = util.rgb2ycbcr(img_sr, only_y=True)
@@ -176,14 +183,14 @@ def run(model, model_name, data_range, tile, logger, device, args, mode="test"):
 
     results[f"{mode}_memory"] = torch.cuda.max_memory_allocated(torch.cuda.current_device()) / 1024 ** 2
     results[f"{mode}_ave_runtime"] = sum(results[f"{mode}_runtime"]) / len(results[f"{mode}_runtime"]) #/ 1000.0
-    results[f"{mode}_ave_psnr"] = sum(results[f"{mode}_psnr"]) / len(results[f"{mode}_psnr"])
-    if args.ssim:
-        results[f"{mode}_ave_ssim"] = sum(results[f"{mode}_ssim"]) / len(results[f"{mode}_ssim"])
+    # results[f"{mode}_ave_psnr"] = sum(results[f"{mode}_psnr"]) / len(results[f"{mode}_psnr"])
+    # if args.ssim:
+    #     results[f"{mode}_ave_ssim"] = sum(results[f"{mode}_ssim"]) / len(results[f"{mode}_ssim"])
     # results[f"{mode}_ave_psnr_y"] = sum(results[f"{mode}_psnr_y"]) / len(results[f"{mode}_psnr_y"])
     # results[f"{mode}_ave_ssim_y"] = sum(results[f"{mode}_ssim_y"]) / len(results[f"{mode}_ssim_y"])
     logger.info("{:>16s} : {:<.3f} [M]".format("Max Memory", results[f"{mode}_memory"]))  # Memery
     logger.info("------> Average runtime of ({}) is : {:.6f} milliseconds".format("test" if mode == "test" else "valid", results[f"{mode}_ave_runtime"]))
-    logger.info("------> Average PSNR of ({}) is : {:.6f} dB".format("test" if mode == "test" else "valid", results[f"{mode}_ave_psnr"]))
+    # logger.info("------> Average PSNR of ({}) is : {:.6f} dB".format("test" if mode == "test" else "valid", results[f"{mode}_ave_psnr"]))
 
     return results
 
@@ -221,9 +228,9 @@ def main(args):
         # --------------------------------
 
         # inference on the DIV2K_LSDIR_valid set
-        valid_results = run(model, model_name, data_range, tile, logger, device, args, mode="valid")
+        # valid_results = run(model, model_name, data_range, tile, logger, device, args, mode="valid")
         # record PSNR, runtime
-        results[model_name] = valid_results
+        # results[model_name] = valid_results
 
         # inference conducted by the Organizer on DIV2K_LSDIR_test set
         if args.include_test:
@@ -270,16 +277,16 @@ def main(args):
         flops = f"{v['flops']:2.2f}"
         acts = f"{v['activations']:2.2f}"
         conv = f"{v['num_conv']:4d}"
-        if args.include_test:
+        # if args.include_test:
             # from IPython import embed; embed()
-            test_psnr = f"{v['test_ave_psnr']:2.2f}"
-            test_time = f"{v['test_ave_runtime']:3.2f}"
-            ave_time = f"{(v['valid_ave_runtime'] + v['test_ave_runtime']) / 2:3.2f}"
-            s += fmt.format(k, val_psnr, test_psnr, val_time, test_time, ave_time, num_param, flops, acts, mem, conv)
-        else:
-            s += fmt.format(k, val_psnr, val_time, num_param, flops, acts, mem, conv)
-    with open(os.path.join(os.getcwd(), 'results.txt'), "w") as f:
-        f.write(s)
+            # test_psnr = f"{v['test_ave_psnr']:2.2f}"
+            # test_time = f"{v['test_ave_runtime']:3.2f}"
+            # ave_time = f"{(v['valid_ave_runtime'] + v['test_ave_runtime']) / 2:3.2f}"
+            # s += fmt.format(k, val_psnr, test_psnr, val_time, test_time, ave_time, num_param, flops, acts, mem, conv)
+        # else:
+            # s += fmt.format(k, val_psnr, val_time, num_param, flops, acts, mem, conv)
+    # with open(os.path.join(os.getcwd(), 'results.txt'), "w") as f:
+    #     f.write(s)
 
 
 if __name__ == "__main__":
